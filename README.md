@@ -38,3 +38,12 @@ To evaluate your model, you must create a CSV file containing predictions for th
 
 The ID of the first prediction should be 1, not 0.
 The metric used for evaluation is prediction accuracy (proportion of correct predictions).
+
+## Final Work
+### Numpy only implementation of CNN 
+Milestone_1_CNN file milestone_1_NN_original_overtrain
+Accuracy of 65%
+
+### Package allowed implementation of CNN
+milestone_2_NN_V5
+Accuracy of 85%
