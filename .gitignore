@@ -1,3 +1,7 @@
 
 Data/test_data.pkl
 Data/train_data.pkl
+/__pycache__
+/.ipynb_checkpoints
+/Milestone_1_linear_classifiers/.ipynb_checkpoints
+/Milestone_1_Non_linear_perceptron/.ipynb_checkpoints

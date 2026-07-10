@@ -1,49 +1,103 @@
-# IFT6390B Kaggle 2
+# Retinal Disease Classification from OCT Images
 
-https://www.kaggle.com/competitions/ift3395-ift6390-identification-maladies-retine 
+Classifying optical coherence tomography (OCT) retinal scans into four diagnostic
+classes. Built for the IFT3395/IFT6390 Kaggle competition, the project works up from
+linear baselines to a convolutional neural network written from scratch in NumPy, and
+finally to a tuned CNN in TensorFlow that reaches ~80% test accuracy.
 
-## Description
+**Authors:** Louis-Charles Fortier · Cheng Zhang
 
-This competition aims to identify various retinal diseases present in optical coherence tomography (OCT) images. The data describes four diagnostic types (classes):
+---
 
-0: choroidal neovascularization
-1: diabetic macular edema
-2: drusen
-3: healthy retina
-This is a multi-class image classification problem (4 classes). We have a large training dataset (~97,000 images), each sized 28x28 pixels. For relatively simple methods, feel free to use a subset of the training data. Your task is to develop a classifier capable of identifying one of the four mentioned diagnoses for a given OCT image.
+## Problem
 
-## Important Milestones
+Given ~97,000 labelled 28×28 grayscale OCT images, predict one of four classes:
 
-X November: Team Formation
-Teams are formed to participate in the competition.
+| Label | Diagnosis |
+|:-----:|-----------|
+| 0 | Choroidal neovascularization |
+| 1 | Diabetic macular edema |
+| 2 | Drusen |
+| 3 | Healthy retina |
 
-X November:
-To earn full points, your model must perform at least as well as the three classifiers listed on the Leaderboard:
+The test set is 1,000 unlabelled images and the evaluation metric is classification
+accuracy.
 
-## Random Prediction
+## Results
 
-Logistic Regression
-SVM with an RBF kernel
-Additionally, you must submit your code on Gradescope.
+| Model | Public | Private |
+|-------|:------:|:-------:|
+| Logistic regression | baseline | baseline |
+| CNN — NumPy from scratch (15 epochs) | 56.5% | 57.3% |
+| CNN — TensorFlow, tuned + bootstrapped voting | **75.5%** | **80.1%** |
 
-December 3: End of Competition
-The competition closes, and all submissions must be finalized.
+Highlights from the analysis:
 
-December 3: Report Submission Deadline
-Teams must submit their reports.
+- A two-convolution CNN with kernel widths of 7 and 5 and moderate capacity gave the
+  best trade-off between accuracy and training time.
+- Gaussian filtering produced no significant gain; Local Binary Pattern features
+  slightly *hurt* performance and encouraged earlier overfitting.
+- Bootstrapped ensemble voting reduced variance for a ~2% lift on both leaderboards.
+- The confusion matrix shows most remaining error is healthy retinas (class 3) being
+  predicted as drusen (class 2) — the clearest target for future improvement.
 
-## Evaluation
+The full write-up with figures and tables is in [`report/`](report/).
 
-To evaluate your model, you must create a CSV file containing predictions for the examples in test_data.pkl. The format is as follows:
+## Repository structure
 
-The ID of the first prediction should be 1, not 0.
-The metric used for evaluation is prediction accuracy (proportion of correct predictions).
+```
+.
+├── notebooks/
+│   ├── 01_linear_baselines.ipynb    # logistic regression baseline
+│   ├── 02_cnn_numpy.ipynb           # from-scratch NumPy CNN   (56.5% / 57.3%)
+│   ├── 03_cnn_kernel_search.ipynb   # kernel-width hyperparameter sweeps
+│   └── 04_cnn_final.ipynb           # final TensorFlow CNN      (75.5% / 80.1%)
+├── src/
+│   ├── functions.py                 # shared preprocessing / helper functions
+│   └── perceptron.py                # perceptron implementation
+├── results/
+│   └── submission.csv               # best Kaggle submission
+├── report/
+│   └── report.pdf                   # full report with figures and tables
+├── old/                             # earlier iterations, kept for reference
+├── requirements.txt
+└── README.md
+```
 
-## Final Work
-### Numpy only implementation of CNN 
-Milestone_1_CNN file milestone_1_NN_original_overtrain
-Accuracy of 65%
+`old/` holds development notebooks, alternate models, and superseded submissions. It is
+not needed to reproduce the results and can be ignored.
 
-### Package allowed implementation of CNN
-milestone_2_NN_V5
-Accuracy of 85%
+## Getting started
+
+```bash
+pip install -r requirements.txt
+jupyter lab
+```
+
+The dataset is not included in this repository. Download `train_data.pkl` and
+`test_data.pkl` from the
+[Kaggle competition page](https://www.kaggle.com/competitions/ift3395-ift6390-identification-maladies-retine)
+and place them in a `data/` folder at the project root. Then run the notebooks in
+numeric order — each is self-contained.
+
+## Methods
+
+**Preprocessing.** The classes are imbalanced (0: 27k, 1: 8k, 2: 6k, 3: 37k). Two
+strategies address this: undersampling every class down to the smallest, and a
+bootstrapping scheme that rebuilds several balanced training sets from the full data.
+Optional Gaussian filtering and LBP feature extraction were also evaluated.
+
+**Baseline.** Logistic regression, used as the reference point the CNNs must beat.
+
+**NumPy CNN.** A single conv → ReLU → max-pool → dense → logits network implemented
+without a deep-learning framework, to demonstrate the mechanics end to end.
+
+**TensorFlow CNN.** Two conv/ReLU/max-pool blocks with dropout (0.25), a dense layer,
+and a softmax output. Kernel widths, capacity, and input representation were tuned on a
+20% validation split; the final model is an ensemble combined by bootstrap voting.
+
+## Possible improvements
+
+L1/L2 regularization with a smaller learning rate, stronger domain-informed feature
+engineering aimed at the class 2/3 confusion, and augmentation robustness testing
+(small rotations and mirroring) are the most promising next steps.
